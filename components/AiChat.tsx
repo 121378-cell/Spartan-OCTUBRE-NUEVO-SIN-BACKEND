@@ -1,0 +1,187 @@
+
+
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+// Fix: Correct import path for AppContext
+import { useAppContext } from '../context/AppContext.tsx';
+// Fix: Correct import path for types
+import { type ChatMessage, type AiResponse } from '../types.ts';
+// Fix: Correct import path for aiService
+import { processUserCommand } from '../services/aiService.ts';
+import { useSpeechRecognition } from '../hooks/useSpeechRecognition.ts';
+import SendIcon from './icons/SendIcon.tsx';
+import MicrophoneIcon from './icons/MicrophoneIcon.tsx';
+import StopCircleIcon from './icons/StopCircleIcon.tsx';
+import ThumbUpIcon from './icons/ThumbUpIcon.tsx';
+import ThumbDownIcon from './icons/ThumbDownIcon.tsx';
+import BrainIcon from './icons/BrainIcon.tsx';
+
+const AiChat: React.FC = () => {
+    const { userProfile, routines, handleAiResponse, toggleChat, logUserFeedback } = useAppContext();
+    
+    const [messages, setMessages] = useState<ChatMessage[]>([
+        { id: 0, text: `Soy <strong>SynergyCoach</strong>. ¿Cómo podemos optimizar tu rendimiento físico y mental hoy?`, sender: 'ai' }
+    ]);
+    const [userInput, setUserInput] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const messagesEndRef = useRef<null | HTMLDivElement>(null);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    useEffect(scrollToBottom, [messages, isLoading]);
+    
+    const handleTranscript = (transcript: string) => {
+        if (transcript) {
+            setUserInput(transcript);
+        }
+    };
+    
+    const { isListening, startListening, stopListening, isSupported } = useSpeechRecognition(handleTranscript);
+
+    const handleSend = useCallback(async (text: string) => {
+        const messageText = text.trim();
+        if (!messageText) return;
+
+        const newUserMessage: ChatMessage = {
+            id: Date.now(),
+            text: messageText,
+            sender: 'user',
+        };
+        setMessages(prev => [...prev, newUserMessage]);
+        setUserInput('');
+        setIsLoading(true);
+        if (isListening) {
+            stopListening();
+        }
+
+        const responseData = await processUserCommand(messageText, { userProfile, routines });
+        
+        // Fix: Handle cases where the AI response might be null or not conform to the AiResponse type.
+        const aiResponse: AiResponse = (responseData && responseData.type && responseData.message)
+            ? responseData
+            : { type: 'response', message: "Lo siento, estoy teniendo problemas para procesar tu solicitud en este momento." };
+        
+        const newAiMessage: ChatMessage = {
+            id: Date.now() + 1,
+            text: aiResponse.message,
+            sender: 'ai',
+        };
+        
+        // Wait a bit before showing the AI response to feel more natural
+        setTimeout(() => {
+            setMessages(prev => [...prev, newAiMessage]);
+            setIsLoading(false);
+            handleAiResponse(aiResponse);
+        }, 500);
+    }, [handleAiResponse, isListening, routines, stopListening, userProfile]);
+
+
+    const handleFeedback = (messageId: number, feedback: 'good' | 'bad') => {
+        const messageIndex = messages.findIndex(m => m.id === messageId);
+        
+        if (messageIndex < 1 || messages[messageIndex].sender !== 'ai' || messages[messageIndex - 1].sender !== 'user') {
+            return;
+        }
+
+        const aiMessage = messages[messageIndex];
+        const userMessage = messages[messageIndex - 1];
+
+        const newFeedback = aiMessage.feedback === feedback ? undefined : feedback;
+
+        setMessages(prev => prev.map(msg => 
+            msg.id === messageId ? { ...msg, feedback: newFeedback } : msg
+        ));
+
+        if (newFeedback) {
+            logUserFeedback(aiMessage, userMessage, newFeedback);
+        }
+    };
+    
+    const handleFormSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        handleSend(userInput);
+    };
+
+    return (
+        <div className="fixed bottom-24 right-8 z-50 w-full max-w-md bg-spartan-surface rounded-lg shadow-2xl flex flex-col h-[60vh] animate-fadeIn" role="log" aria-live="polite">
+            <header className="flex justify-between items-center p-4 border-b border-spartan-border">
+                <h3 className="text-xl font-bold text-spartan-gold">Entrenador IA</h3>
+                <button onClick={toggleChat} className="text-spartan-text-secondary hover:text-spartan-text" aria-label="Cerrar Entrenador IA">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </header>
+            <div className="flex-1 p-4 overflow-y-auto space-y-4">
+                {messages.map((msg, index) => (
+                    <div key={msg.id} className={`flex items-end gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    {msg.sender === 'ai' && (
+                        <div className="w-8 h-8 bg-spartan-gold rounded-full flex-shrink-0 flex items-center justify-center" aria-hidden="true">
+                            <BrainIcon className="w-5 h-5 text-spartan-bg" />
+                        </div>
+                    )}
+                    <div className={`p-3 rounded-lg max-w-xs md:max-w-sm ${msg.sender === 'user' ? 'bg-spartan-gold text-spartan-bg' : 'bg-spartan-card'}`}>
+                            {msg.sender === 'ai' && (
+                                <p className="font-bold text-spartan-gold text-sm mb-1">SynergyCoach</p>
+                            )}
+                            <p className="text-sm" dangerouslySetInnerHTML={{ __html: msg.text.replace(/\n/g, '<br />') }}></p>
+                            {msg.sender === 'ai' && index > 0 && (
+                                <div className="flex justify-end items-center gap-2 mt-2 pt-2 border-t border-spartan-border/20">
+                                    <button 
+                                        onClick={() => handleFeedback(msg.id, 'good')} 
+                                        className={`p-1 rounded-full transition-colors ${msg.feedback === 'good' ? 'bg-green-500 text-white' : 'text-spartan-text-secondary hover:bg-spartan-border hover:text-spartan-text'}`}
+                                        aria-label="Buena respuesta"
+                                    >
+                                        <ThumbUpIcon />
+                                    </button>
+                                    <button 
+                                        onClick={() => handleFeedback(msg.id, 'bad')}
+                                        className={`p-1 rounded-full transition-colors ${msg.feedback === 'bad' ? 'bg-red-500 text-white' : 'text-spartan-text-secondary hover:bg-spartan-border hover:text-spartan-text'}`}
+                                        aria-label="Mala respuesta"
+                                    >
+                                        <ThumbDownIcon />
+                                    </button>
+                                </div>
+                            )}
+                    </div>
+                    </div>
+                ))}
+                {isLoading && (
+                     <div className="flex items-end gap-2 justify-start">
+                        <div className="w-8 h-8 bg-spartan-gold rounded-full flex-shrink-0 flex items-center justify-center font-bold text-spartan-bg text-sm" aria-hidden="true">
+                            <BrainIcon className="w-5 h-5 text-spartan-bg animate-pulse" />
+                        </div>
+                        <div className="p-3 rounded-lg bg-spartan-card">
+                             <div className="flex items-center gap-1.5 h-5">
+                                <span className="w-2 h-2 bg-spartan-text-secondary rounded-full animate-pulse [animation-delay:0s]"></span>
+                                <span className="w-2 h-2 bg-spartan-text-secondary rounded-full animate-pulse [animation-delay:0.2s]"></span>
+                                <span className="w-2 h-2 bg-spartan-text-secondary rounded-full animate-pulse [animation-delay:0.4s]"></span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                 <div ref={messagesEndRef} />
+            </div>
+            <form onSubmit={handleFormSubmit} className="p-4 border-t border-spartan-border flex items-center gap-2">
+                <input
+                    type="text"
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    placeholder="Chatea con SynergyCoach..."
+                    className="flex-1 bg-spartan-card border border-spartan-border rounded-lg p-2 focus:ring-2 focus:ring-spartan-gold focus:outline-none"
+                    disabled={isLoading}
+                    aria-label="Entrada de chat"
+                />
+                {isSupported && (
+                    <button type="button" onClick={isListening ? stopListening : startListening} className={`p-2 rounded-full transition-colors ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-spartan-card hover:bg-spartan-border'}`} aria-label={isListening ? 'Dejar de escuchar' : 'Empezar a escuchar'}>
+                       {isListening ? <StopCircleIcon /> : <MicrophoneIcon />}
+                    </button>
+                )}
+                <button type="submit" className="p-2 bg-spartan-gold text-spartan-bg rounded-full hover:bg-yellow-500 disabled:bg-spartan-border" disabled={isLoading || !userInput.trim()} aria-label="Enviar mensaje">
+                    <SendIcon />
+                </button>
+            </form>
+        </div>
+    );
+};
+
+export default AiChat;
