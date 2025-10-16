@@ -1,30 +1,56 @@
 const express = require('express');
 const router = express.Router();
-
-// Placeholder for business logic related to PSD3 and RAD3
+const db = require('../database');
 
 /**
  * @route   POST /plan/asignar
- * @desc    Assign a plan (Placeholder for PSD3 logic)
+ * @desc    Assign a new plan to a user.
  * @access  Public
  */
 router.post('/asignar', (req, res) => {
-  // Placeholder logic: In a real implementation, this would involve
-  // creating and assigning a plan in the database.
-  console.log('Received data for /plan/asignar:', req.body);
-  res.json({ success: true, message: 'Plan assigned successfully (placeholder).' });
+  const { user_id } = req.body;
+
+  if (!user_id) {
+    return res.status(400).json({ error: 'user_id is required.' });
+  }
+
+  try {
+    const stmt = db.prepare('INSERT INTO plans (user_id) VALUES (?)');
+    const info = stmt.run(user_id);
+    res.status(201).json({
+      success: true,
+      message: 'Plan assigned successfully.',
+      plan_id: info.lastInsertRowid
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Database error.', details: error.message });
+  }
 });
 
 /**
  * @route   POST /plan/compromiso
- * @desc    Commit to a plan (Placeholder for RAD3 logic)
+ * @desc    Commit to a specific plan.
  * @access  Public
  */
 router.post('/compromiso', (req, res) => {
-  // Placeholder logic: In a real implementation, this would involve
-  // updating a plan's status to 'committed' in the database.
-  console.log('Received data for /plan/compromiso:', req.body);
-  res.json({ success: true, message: 'Plan commitment recorded successfully (placeholder).' });
+  const { plan_id } = req.body;
+
+  if (!plan_id) {
+    return res.status(400).json({ error: 'plan_id is required.' });
+  }
+
+  try {
+    const stmt = db.prepare('UPDATE plans SET committed = 1 WHERE id = ?');
+    const info = stmt.run(plan_id);
+
+    if (info.changes === 0) {
+      return res.status(404).json({ error: 'Plan not found.' });
+    }
+
+    res.json({ success: true, message: 'Plan commitment recorded successfully.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Database error.', details: error.message });
+  }
 });
 
 module.exports = router;
