@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { AppProvider, useAppContext } from './context/AppContext.tsx';
+import { saveLastRoutine, loadLastRoutine } from './services/storageService';
 import Sidebar from './components/Sidebar.tsx';
 import Dashboard from './components/Dashboard.tsx';
 import Routines from './components/Routines.tsx';
@@ -76,6 +77,13 @@ const AppContent: React.FC = () => {
   } = useAppContext();
 
   useEffect(() => {
+    // Demonstrate storage service usage
+    const lastRoutine = loadLastRoutine();
+    if (!lastRoutine) {
+      console.log('No routine found, saving a default one for offline use.');
+      saveLastRoutine({ id: 'default-offline', name: 'Default Offline Routine' });
+    }
+
     if (!userProfile.onboardingCompleted) {
       showModal('evaluation');
     }
