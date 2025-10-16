@@ -47,4 +47,4 @@ def predict_alert(request: PredictionRequest):
     # We check if any prediction in the batch is '1'.
     alert_triggered = bool(1 in pred_onx[0])
 
-    return {"alert": alert_triggered}
+    return {"AlertaRoja": alert_triggered}
