@@ -18,9 +18,9 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Install only the runtime dependencies
-# We are creating a minimal requirements file on-the-fly.
-RUN pip install --no-cache-dir fastapi uvicorn onnxruntime numpy
+# Copy runtime requirements and install
+COPY api/requirements-runtime.txt .
+RUN pip install --no-cache-dir -r requirements-runtime.txt
 
 # Copy only the essential files from the builder stage
 COPY --from=builder /app/risk_model.onnx .

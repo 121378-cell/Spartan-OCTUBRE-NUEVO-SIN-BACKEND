@@ -29,11 +29,11 @@ def read_root():
     """A root endpoint for basic health checks."""
     return {"message": "AI Risk Classification Service is running"}
 
-@app.post("/predict")
-def predict(request: PredictionRequest):
+@app.post("/predict_alert")
+def predict_alert(request: PredictionRequest):
     """
-    Performs inference using the loaded ONNX model.
-    Accepts a list of feature sets and returns a list of predictions.
+    Performs inference using the loaded ONNX model and returns a boolean alert.
+    Accepts a list of feature sets and returns whether an alert should be triggered.
     """
     # Convert the input list to a NumPy array of type float32
     input_data = np.array(request.features, dtype=np.float32)
@@ -43,6 +43,8 @@ def predict(request: PredictionRequest):
     pred_onx = ort_session.run(None, {input_name: input_data})
 
     # The first output of the model is the predicted label (e.g., 0 or 1)
-    prediction = pred_onx[0].tolist()
+    # We assume '1' signifies high risk and should trigger an alert.
+    # We check if any prediction in the batch is '1'.
+    alert_triggered = bool(1 in pred_onx[0])
 
-    return {"prediction": prediction}
+    return {"alert": alert_triggered}
