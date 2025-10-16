@@ -7,6 +7,8 @@ services:
       - "3000:3000"
     depends_on:
       - synergycoach_ia
+    networks:
+      - synergycoach_net
 
   synergycoach_ia:
     build:
@@ -14,3 +16,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
+    networks:
+      - synergycoach_net
+
+networks:
+  synergycoach_net:
+    driver: bridge
