@@ -1,0 +1,16 @@
+services:
+  synergycoach_backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - synergycoach_ia
+
+  synergycoach_ia:
+    build:
+      context: ./AI
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
