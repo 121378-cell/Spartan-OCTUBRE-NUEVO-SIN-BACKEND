@@ -30,7 +30,7 @@ const QuickProtocol: React.FC<{ title: string; onAction: () => void }> = ({ titl
 );
 
 const Flow: React.FC = () => {
-    const { showModal } = useAppContext();
+    const { showModal, startFocusSession } = useAppContext();
 
     const stateTransitionInstructions = {
         eyeNeck: {
@@ -68,11 +68,11 @@ const Flow: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Focus Activation */}
                 <ProtocolCard
-                    title="Activación de Foco (10 min)"
-                    description="Una rutina de preparación diseñada para calentar tu cuerpo, agudizar tu mente y crear el entorno bioquímico ideal para un trabajo profundo e ininterrumpido. Úsala para iniciar tus bloques de trabajo más importantes."
+                    title="Activación de Foco (45 min)"
+                    description="Inicia un bloque de trabajo profundo inmersivo. La app gestionará tu entorno bloqueando distracciones e inyectando modulación auditiva para maximizar la concentración."
                     icon={<FocusIcon className="w-8 h-8"/>}
-                    onAction={() => showModal('focus-activation')}
-                    actionLabel="Iniciar Protocolo de Activación"
+                    onAction={startFocusSession}
+                    actionLabel="Iniciar Bloque de Foco"
                 />
 
                 {/* State Transition */}

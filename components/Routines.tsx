@@ -1,7 +1,9 @@
 import React from 'react';
 // Fix: Correct import path for AppContext
-import { useAppContext } from '../context/AppContext.tsx';
+import { useAppContext } from '../context/AppContext';
 import BrainIcon from './icons/BrainIcon.tsx';
+import InfoIcon from './icons/InfoIcon.tsx';
+import SwapIcon from './icons/SwapIcon.tsx';
 
 const Routines: React.FC = () => {
   const { routines, startWorkout, showModal, requestAiRoutineSuggestion } = useAppContext();
@@ -48,8 +50,17 @@ const Routines: React.FC = () => {
                       <p className="text-sm font-bold text-spartan-text-secondary uppercase tracking-wider">{block.name}</p>
                       <ul className="pl-2 mt-1 space-y-1 border-l-2 border-spartan-border">
                         {block.exercises.map((ex, exIndex) => (
-                          <li key={exIndex} className="flex justify-between text-sm">
-                            <span>{ex.name}</span>
+                          <li key={exIndex} className="flex justify-between items-center text-sm group">
+                            <div className="flex items-center gap-2">
+                                <button 
+                                    onClick={() => showModal('exercise-detail', { exerciseName: ex.name })}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                    aria-label={`Ver detalles de ${ex.name}`}
+                                >
+                                    <InfoIcon className="w-4 h-4 text-spartan-gold"/>
+                                </button>
+                                <span>{ex.name}</span>
+                            </div>
                             <span className="font-mono text-spartan-text-secondary">{`${ex.sets}x${ex.reps}`}</span>
                           </li>
                         ))}
@@ -58,7 +69,14 @@ const Routines: React.FC = () => {
                   ))}
                 </ul>
               </div>
-              <div className="mt-6 text-right">
+              <div className="mt-6 flex items-center justify-end gap-2">
+                 <button 
+                    onClick={() => showModal('adapt-routine', { routine })}
+                    className="p-2 rounded-lg text-spartan-text-secondary hover:bg-spartan-surface transition-colors"
+                    title="Adaptar o traducir esta rutina"
+                  >
+                      <SwapIcon className="w-5 h-5" />
+                  </button>
                 <button 
                   onClick={() => startWorkout(routine)}
                   className="bg-spartan-gold text-spartan-bg font-bold py-2 px-4 rounded-lg text-sm hover:bg-yellow-500 transition-colors"

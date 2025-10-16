@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 // Fix: Correct import path for AppContext
-import { useAppContext } from '../../context/AppContext.tsx';
+import { useAppContext } from '../../context/AppContext';
 
 const EditProfileModal: React.FC = () => {
   const { userProfile, updateProfile, hideModal, showToast } = useAppContext();

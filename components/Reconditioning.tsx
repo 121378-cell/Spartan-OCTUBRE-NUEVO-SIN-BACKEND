@@ -2,6 +2,7 @@ import React from 'react';
 import { useAppContext } from '../context/AppContext.tsx';
 import BrainIcon from './icons/BrainIcon.tsx';
 import LotusIcon from './icons/LotusIcon.tsx';
+import BandAidIcon from './icons/BandAidIcon.tsx';
 
 const Reconditioning: React.FC = () => {
   const { reconditioningPlans, showModal, requestAiReconditioningPlanSuggestion } = useAppContext();
@@ -37,6 +38,24 @@ const Reconditioning: React.FC = () => {
               Crear Nuevo Plan
             </button>
         </div>
+      </div>
+      
+       <div className="mb-8 bg-spartan-surface p-6 rounded-lg shadow-lg">
+          <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="flex-shrink-0">
+                  <BandAidIcon className="w-12 h-12 text-spartan-gold" />
+              </div>
+              <div className="flex-grow text-center md:text-left">
+                  <h2 className="text-2xl font-bold">¿Sientes alguna molestia o dolor?</h2>
+                  <p className="text-spartan-text-secondary mt-1">Obtén un protocolo de ajuste biomecánico y pre-habilitación de la IA para entrenar de forma segura e inteligente.</p>
+              </div>
+              <button
+                  onClick={() => showModal('discomfort-report')}
+                  className="bg-spartan-card text-spartan-text font-bold py-3 px-6 rounded-lg hover:bg-spartan-border transition-colors w-full md:w-auto"
+              >
+                  Reportar Molestia
+              </button>
+          </div>
       </div>
 
       {reconditioningPlans.length === 0 ? (

@@ -14,6 +14,7 @@ import NutritionIcon from './icons/NutritionIcon.tsx';
 import RegulationIcon from './icons/RegulationIcon.tsx';
 import BookIcon from './icons/BookIcon.tsx';
 import FocusIcon from './icons/FocusIcon.tsx';
+import ChartBarIcon from './icons/ChartBarIcon.tsx';
 
 interface NavItemProps {
   page: Page;
@@ -27,8 +28,9 @@ const Sidebar: React.FC = () => {
   const navItems: NavItemProps[] = [
     { page: 'dashboard', label: 'Panel', icon: <HomeIcon className="w-6 h-6" /> },
     { page: 'routines', label: 'Rutinas', icon: <DumbbellIcon className="w-6 h-6" /> },
+    { page: 'exercise-library', label: 'Armería', icon: <UserIcon className="w-6 h-6" /> },
+    { page: 'progress', label: 'Progreso', icon: <ChartBarIcon className="w-6 h-6" /> },
     { page: 'calendar', label: 'Calendario', icon: <CalendarIcon className="w-6 h-6" /> },
-    { page: 'profile', label: 'Armería', icon: <UserIcon className="w-6 h-6" /> },
     { page: 'legend', label: 'Leyenda', icon: <LaurelWreathIcon className="w-6 h-6" /> },
     { page: 'discipline', label: 'Disciplina', icon: <FireIcon className="w-6 h-6" /> },
     { page: 'flow', label: 'Flujo', icon: <FocusIcon className="w-6 h-6" /> },

@@ -1,12 +1,13 @@
 
 
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 // Fix: Correct import path for AppContext
-import { useAppContext } from '../context/AppContext.tsx';
+import { useAppContext } from '../context/AppContext';
 // Fix: Correct import path for types
-import { type ChatMessage, type AiResponse } from '../types.ts';
+import { type ChatMessage, type AiResponse } from '../types';
 // Fix: Correct import path for aiService
-import { processUserCommand } from '../services/aiService.ts';
+import { processUserCommand } from '../services/aiService';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition.ts';
 import SendIcon from './icons/SendIcon.tsx';
 import MicrophoneIcon from './icons/MicrophoneIcon.tsx';
@@ -16,7 +17,7 @@ import ThumbDownIcon from './icons/ThumbDownIcon.tsx';
 import BrainIcon from './icons/BrainIcon.tsx';
 
 const AiChat: React.FC = () => {
-    const { userProfile, routines, handleAiResponse, toggleChat, logUserFeedback } = useAppContext();
+    const { userProfile, routines, handleAiResponse, toggleChat, logUserFeedback, showToast } = useAppContext();
     
     const [messages, setMessages] = useState<ChatMessage[]>([
         { id: 0, text: `Soy <strong>SynergyCoach</strong>. ¿Cómo podemos optimizar tu rendimiento físico y mental hoy?`, sender: 'ai' }
@@ -37,7 +38,15 @@ const AiChat: React.FC = () => {
         }
     };
     
-    const { isListening, startListening, stopListening, isSupported } = useSpeechRecognition(handleTranscript);
+    const handleRecognitionError = useCallback((error: string) => {
+        if (error === 'no-speech') {
+            showToast("No se detectó voz. Inténtalo de nuevo.");
+        } else if (error !== 'aborted') { // Don't show toast if user manually stops it
+            showToast("Error en el reconocimiento de voz.");
+        }
+    }, [showToast]);
+
+    const { isListening, startListening, stopListening, isSupported } = useSpeechRecognition(handleTranscript, handleRecognitionError);
 
     const handleSend = useCallback(async (text: string) => {
         const messageText = text.trim();
@@ -57,7 +66,6 @@ const AiChat: React.FC = () => {
 
         const responseData = await processUserCommand(messageText, { userProfile, routines });
         
-        // Fix: Handle cases where the AI response might be null or not conform to the AiResponse type.
         const aiResponse: AiResponse = (responseData && responseData.type && responseData.message)
             ? responseData
             : { type: 'response', message: "Lo siento, estoy teniendo problemas para procesar tu solicitud en este momento." };

@@ -5,13 +5,14 @@ const CreateHabitModal: React.FC = () => {
     const { hideModal, addKeystoneHabit, showToast } = useAppContext();
     const [name, setName] = useState('');
     const [anchor, setAnchor] = useState('');
+    const [notificationTime, setNotificationTime] = useState('');
 
     const handleSave = () => {
         if (!name.trim() || !anchor.trim()) {
             showToast("Por favor, completa ambos campos.");
             return;
         }
-        addKeystoneHabit({ name, anchor });
+        addKeystoneHabit({ name, anchor, notificationTime });
         showToast("¡Nuevo hábito añadido!");
         hideModal();
     };
@@ -45,6 +46,17 @@ const CreateHabitModal: React.FC = () => {
                         className="w-full bg-spartan-card border border-spartan-border rounded-lg p-2 focus:ring-2 focus:ring-spartan-gold focus:outline-none"
                         placeholder="Ej: Después de mi café matutino"
                     />
+                </div>
+                <div>
+                    <label htmlFor="notificationTime" className="block text-sm font-medium text-spartan-text-secondary mb-1">Hora de Recordatorio (Opcional)</label>
+                    <input
+                        id="notificationTime"
+                        type="time"
+                        value={notificationTime}
+                        onChange={(e) => setNotificationTime(e.target.value)}
+                        className="w-full bg-spartan-card border border-spartan-border rounded-lg p-2 focus:ring-2 focus:ring-spartan-gold focus:outline-none"
+                    />
+                    <p className="text-xs text-spartan-text-secondary mt-1">Recibe una notificación táctica a esta hora si no has completado el hábito.</p>
                 </div>
             </div>
 

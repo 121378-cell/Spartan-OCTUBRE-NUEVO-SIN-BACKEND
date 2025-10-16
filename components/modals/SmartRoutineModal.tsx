@@ -1,10 +1,10 @@
 import React, { useState, useContext } from 'react';
 // Fix: Correct import path for AppContext
-import { AppContext } from '../../context/AppContext.tsx';
+import { AppContext } from '../../context/AppContext';
 // Fix: Correct import path for types
-import type { Routine } from '../../types.ts';
+import type { Routine } from '../../types';
 // Fix: Correct import path for aiService
-import { generateRoutine } from '../../services/aiService.ts';
+import { generateRoutine } from '../../services/aiService';
 import LoadingSpinner from '../LoadingSpinner.tsx';
 
 const SmartRoutineModal: React.FC = () => {

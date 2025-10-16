@@ -22,16 +22,13 @@ const MilestoneCard: React.FC<{ title: string; description: string; isCompleted:
 );
 
 const Legend: React.FC = () => {
-    const { userProfile, updateQuestAndMilestones, dailyLogs, addOrUpdateDailyLog, workoutHistory, weeklyCheckIns, showModal } = useAppContext();
+    const { userProfile, updateQuestAndMilestones, dailyLogs, workoutHistory, weeklyCheckIns, showModal } = useAppContext();
     const [conversationState, setConversationState] = useState<ConversationState>('loading');
     const [oracleMessage, setOracleMessage] = useState('');
     const [userInput, setUserInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [weeklyDivination, setWeeklyDivination] = useState<string | null>(null);
 
-    const today = new Date().toISOString().split('T')[0];
-    const todayLog = dailyLogs.find(log => log.date === today) || { date: today, nutrition: 0, recovery: 0 };
-    
     // Check-in Logic
     const isInAutonomyPhase = userProfile.isInAutonomyPhase;
     const checkInPeriod = isInAutonomyPhase ? 30 : 7;
@@ -92,11 +89,6 @@ const Legend: React.FC = () => {
         setIsLoading(false);
         setConversationState('journey_started');
     };
-    
-    const handleDailyLog = (type: 'nutrition' | 'recovery', value: number) => {
-        const newLog = { ...todayLog, [type]: value };
-        addOrUpdateDailyLog(newLog);
-    };
 
     const handleCheckInClick = () => {
         const modalType = isInAutonomyPhase ? 'monthly-check-in' : 'weekly-check-in';
@@ -148,28 +140,6 @@ const Legend: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="bg-spartan-surface p-6 rounded-lg">
-                    <h3 className="text-2xl font-bold mb-4">Ofrendas Diarias</h3>
-                    <div className="space-y-4">
-                        <div>
-                            <p className="font-semibold mb-2">Nutrición</p>
-                            <div className="flex justify-between gap-2">
-                                {[1, 2, 3, 4, 5].map(v => (
-                                    <button key={v} type="button" onClick={() => handleDailyLog('nutrition', v)} className={`w-10 h-10 rounded-full font-bold transition-all ${todayLog.nutrition === v ? 'bg-spartan-gold text-spartan-bg scale-110' : 'bg-spartan-card hover:bg-spartan-border'}`}>{v}</button>
-                                ))}
-                            </div>
-                        </div>
-                         <div>
-                            <p className="font-semibold mb-2">Recuperación (Sueño/Estrés)</p>
-                            <div className="flex justify-between gap-2">
-                                {[1, 2, 3, 4, 5].map(v => (
-                                    <button key={v} type="button" onClick={() => handleDailyLog('recovery', v)} className={`w-10 h-10 rounded-full font-bold transition-all ${todayLog.recovery === v ? 'bg-spartan-gold text-spartan-bg scale-110' : 'bg-spartan-card hover:bg-spartan-border'}`}>{v}</button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                 <div className="bg-spartan-surface p-6 rounded-lg">
                     <h3 className="text-2xl font-bold mb-4">{isInAutonomyPhase ? 'Revisión Mensual' : 'Registro Semanal'}</h3>
                      <p className="text-spartan-text-secondary mb-4">{isInAutonomyPhase ? 'Revisa tu progreso mensual para una visión estratégica a largo plazo.' : 'Evalúa tu progreso semanal para que SynergyCoach pueda ajustar tu estrategia.'}</p>
                      <button 

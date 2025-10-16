@@ -1,73 +1,38 @@
+// types.ts
+
 export type Page = 
-  'dashboard' | 
-  'routines' | 
-  'calendar' | 
-  'profile' | 
-  'session' |
-  'legend' |
-  'discipline' |
-  'reconditioning' |
-  'nutrition' |
-  'master-regulation' |
-  'synergy-hub' |
-  'success-manual' |
-  'flow';
+  | 'dashboard' 
+  | 'routines' 
+  | 'calendar' 
+  | 'exercise-library' 
+  | 'session'
+  | 'legend'
+  | 'discipline'
+  | 'reconditioning'
+  | 'nutrition'
+  | 'master-regulation'
+  | 'success-manual'
+  | 'flow'
+  | 'progress'
+  | 'synergy-hub';
 
-export interface UserProfile {
-  name: string;
-  email: string;
-  stats: {
-    totalWorkouts: number;
-    currentStreak: number;
-    joinDate: string;
-  };
-  quest: string | null;
-  milestones: Milestone[];
-  trials: Trial[];
-  onboardingCompleted: boolean;
-  evaluationData: EvaluationFormData | null;
-  isInAutonomyPhase: boolean;
-  keystoneHabits: KeystoneHabit[];
-  reflections: Reflection[];
-  masterRegulationSettings: MasterRegulationSettings | null;
-}
-
-export interface MasterRegulationSettings {
-  targetBedtime: string;
-}
-
-export interface Reflection {
-  date: string;
+export interface ChatMessage {
+  id: number;
   text: string;
+  sender: 'user' | 'ai';
+  feedback?: 'good' | 'bad';
 }
 
-export interface KeystoneHabit {
-  id: string;
+export interface AiResponseAction {
   name: string;
-  anchor: string;
-  currentStreak: number;
-  longestStreak: number;
-  createdAt: string;
+  payload: any;
 }
 
-export interface HabitLog {
-  habitId: string;
-  date: string;
-}
-
-export interface Milestone {
-  id: string;
-  title: string;
-  description: string;
-  isCompleted: boolean;
-}
-
-export interface Trial {
-  id: string;
-  title: string;
-  description: string;
-  target: number;
-  unit: 'kg' | 'workouts' | 'days';
+export interface AiResponse {
+  type: 'response' | 'action';
+  message: string;
+  feedback?: string;
+  action?: AiResponseAction;
 }
 
 export interface Exercise {
@@ -77,6 +42,7 @@ export interface Exercise {
   rir?: number;
   restSeconds?: number;
   coachTip?: string;
+  tempo?: string;
 }
 
 export interface RoutineBlock {
@@ -88,15 +54,24 @@ export interface Routine {
   id: string;
   name: string;
   focus: string;
+  duration: number;
   objective?: string;
-  duration: number; // in minutes
   blocks: RoutineBlock[];
+}
+
+export interface ScheduledWorkout {
+  date: string; // ISO string 'YYYY-MM-DD'
+  routineId: string;
 }
 
 export interface SetProgress {
   weight: string;
   reps: string;
+  rir?: number;
   completed: boolean;
+  durationSeconds?: number;
+  rpe?: number;
+  quality?: 'max_focus' | 'acceptable' | 'distracted';
 }
 
 export interface ExerciseProgress {
@@ -105,90 +80,70 @@ export interface ExerciseProgress {
 
 export interface WorkoutSession {
   routine: Routine;
-  startTime: number;
   progress: ExerciseProgress[][];
+  startTime: number;
 }
 
 export interface WorkoutHistory {
   id: string;
-  date: string;
   routineName: string;
+  date: string;
   durationMinutes: number;
   totalWeightLifted: number;
   focus: string;
 }
 
-export interface ChatMessage {
-    id: number;
+export interface Trial {
+  id: string;
+  title: string;
+  description: string;
+  target: number;
+  unit: 'kg' | 'workouts' | 'days';
+}
+
+export interface KeystoneHabit {
+    id: string;
+    name: string;
+    anchor: string;
+    currentStreak: number;
+    longestStreak: number;
+    notificationTime?: string; // e.g., "09:00"
+}
+
+export interface Reflection {
+    date: string;
     text: string;
-    sender: 'user' | 'ai';
-    feedback?: 'good' | 'bad';
 }
 
-export interface AiAction {
-  name: string;
-  payload: any;
+export interface JournalEntry {
+    date: string; // ISO string
+    type: 'ai_reframing' | 'user_reflection';
+    title: string;
+    body: string;
 }
 
-export interface AiResponse {
-  type: 'response' | 'action';
-  message: string;
-  feedback?: string;
-  action?: AiAction;
+export interface MasterRegulationSettings {
+    targetBedtime: string;
 }
 
-export interface AppContextState {
-    userProfile: UserProfile;
-    routines: Routine[];
-    activeSession: WorkoutSession | null;
-    workoutHistory: WorkoutHistory[];
-    currentPage: Page;
-    isChatOpen: boolean;
-    modal: {
-        isOpen: boolean;
-        type: string | null;
-        payload?: any;
-    };
-    toast: {
-        isVisible: boolean;
-        message: string;
-    };
-    reconditioningPlans: ReconditioningPlan[];
-    dailyLogs: DailyLog[];
-    habitLogs: HabitLog[];
-    weeklyCheckIns: WeeklyCheckIn[];
-    
-    // Functions
-    setCurrentPage: (page: Page) => void;
-    toggleChat: () => void;
-    showModal: (type: string, payload?: any) => void;
-    hideModal: () => void;
-    showToast: (message: string) => void;
-    updateProfile: (updates: Partial<UserProfile>) => void;
-    addRoutine: (routine: Omit<Routine, 'id'>) => void;
-    startWorkout: (routine: Routine) => void;
-    endWorkout: () => void;
-    updateSetProgress: (blockIndex: number, exerciseIndex: number, setIndex: number, updates: Partial<SetProgress>) => void;
-    handleAiResponse: (response: AiResponse) => void;
-    logUserFeedback: (aiMessage: ChatMessage, userMessage: ChatMessage, feedback: 'good' | 'bad') => void;
-    completeOnboarding: (name: string, evaluationData: EvaluationFormData, initialRoutine: Omit<Routine, 'id'>) => void;
-    updateQuestAndMilestones: (quest: string, milestones: Omit<Milestone, 'id' | 'isCompleted'>[]) => void;
-    addReconditioningPlan: (plan: Omit<ReconditioningPlan, 'id'>) => void;
-    addOrUpdateDailyLog: (log: DailyLog) => void;
-    addKeystoneHabit: (habit: Omit<KeystoneHabit, 'id' | 'currentStreak' | 'longestStreak' | 'createdAt'>) => void;
-    logHabitCompletion: (habitId: string) => void;
-    addReflection: (text: string) => void;
-    updateMasterRegulationSettings: (settings: MasterRegulationSettings) => void;
-    addWeeklyCheckIn: (checkIn: Omit<WeeklyCheckIn, 'date'>) => void;
-    requestAiRoutineSuggestion: () => void;
-    requestAiReconditioningPlanSuggestion: () => void;
-    requestSuccessManual: () => void;
+export interface NutritionSettings {
+    priority: 'performance' | 'longevity';
+    calorieGoal?: number;
+    proteinGoal?: number;
+}
+
+export interface Milestone {
+    id:string;
+    title: string;
+    description: string;
+    isCompleted: boolean;
 }
 
 export interface EvaluationFormData {
     physicalGoals: string;
     mentalGoals: string;
     experienceLevel: 'beginner' | 'intermediate' | 'advanced';
+    weightKg: number;
     energyLevel: number;
     stressLevel: number;
     focusLevel: number;
@@ -199,6 +154,67 @@ export interface EvaluationFormData {
     lifestyle: string;
     painPoint: string;
     communicationTone: 'motivator' | 'analytical' | 'technical';
+    nutritionPriority: 'performance' | 'longevity';
+    activeMobilityIssues?: MobilityIssue[];
+}
+
+export interface ProgressionOverride {
+  recommendedWeight: number;
+}
+
+export interface TrainingCycle {
+    phase: 'adaptation' | 'hypertrophy' | 'strength';
+    startDate: string; // ISO string date
+}
+
+export interface UserProfile {
+  name: string;
+  email: string;
+  quest: string;
+  stats: {
+    totalWorkouts: number;
+    currentStreak: number;
+    joinDate: string;
+  };
+  trials: Trial[];
+  onboardingCompleted: boolean;
+  keystoneHabits: KeystoneHabit[];
+  reflections: Reflection[];
+  journal: JournalEntry[];
+  masterRegulationSettings: MasterRegulationSettings;
+  nutritionSettings: NutritionSettings;
+  milestones: Milestone[];
+  isInAutonomyPhase: boolean;
+  weightKg?: number;
+  evaluationData?: EvaluationFormData;
+  progressionOverrides?: Record<string, Record<string, ProgressionOverride>>;
+  trainingCycle?: TrainingCycle;
+  lastMobilityAssessmentDate?: string;
+  activeMobilityIssues?: string[];
+  chronotypeAnalysis?: ChronotypeAnalysis;
+  lastWeeklyPlanDate?: string;
+}
+
+export interface ModalPayload {
+  [key: string]: any;
+}
+
+export type ModalPosition = 'center' | 'side';
+export type ModalSize = 'default' | 'large' | 'xl';
+
+export interface ModalState {
+  isOpen: boolean;
+  type: string | null;
+  payload?: ModalPayload;
+  position?: ModalPosition;
+  size?: ModalSize;
+  isCritical?: boolean;
+}
+
+
+export interface ToastState {
+  isVisible: boolean;
+  message: string;
 }
 
 export interface ReconditioningActivity {
@@ -217,7 +233,12 @@ export interface ReconditioningPlan {
 export interface DailyLog {
     date: string;
     nutrition: number; // 1-5 scale
-    recovery: number; // 1-5 scale
+    recovery: number; // 1-5 scale (sleep/stress)
+}
+
+export interface HabitLog {
+    habitId: string;
+    date: string;
 }
 
 export interface WeeklyCheckIn {
@@ -228,3 +249,83 @@ export interface WeeklyCheckIn {
     perceivedStress: number; // 0-10 scale
     notes: string;
 }
+
+export interface ChronotypeAnalysis {
+    chronotype: string;
+    description: string;
+    recommendations: {
+        area: string;
+        advice: string;
+    }[];
+}
+
+export interface ExerciseDetail {
+    id: string;
+    name: string;
+    muscleGroups: string[];
+    equipment: string;
+    instructions: string[];
+    biomechanicsFocus: string;
+    injuryModifications: Record<string, { modification: string; reason: string }>;
+    videoUrl?: string;
+    deviation?: {
+      animationName: string; // name of the animation clip in the GLB
+      highlightPart: string; // name of the body part mesh to highlight
+    };
+    suggestedView?: 'frontal' | 'lateral' | 'superior';
+}
+
+export type MobilityIssue = 'tobillo' | 'hombro' | 'cadera' | 'toracica';
+
+export interface MobilityTest {
+    id: string;
+    name: string;
+    instructions: string[];
+    passCriteria: string;
+    failCriteria: string;
+    associatedIssue: MobilityIssue;
+}
+
+export interface MobilityDrill {
+    id: string;
+    name: string;
+    description: string;
+    addresses: MobilityIssue[];
+}
+
+export interface NutritionPlan {
+    macros: {
+        calories: number;
+        protein: number;
+        carbs: number;
+        fats: number;
+    };
+    timing: string;
+    supplements: {
+        name: string;
+        reason: string;
+    }[];
+    mealIdeas: string[];
+    functionalFoods: {
+        name: string;
+        benefit: string;
+    }[];
+    inflammatoryFoodsToLimit: string;
+}
+
+export interface PrehabProtocol {
+  analysis: string;
+  biomechanicalAdjustments: string[];
+  prehabRoutine: {
+    name: string;
+    instruction: string;
+  }[];
+}
+
+export interface CycleReviewResponse {
+    decision: 'progress' | 'extend';
+    reasoning: string;
+    focusPoints: string[];
+}
+
+export type BodyPart = 'Hombro' | 'Rodilla' | 'Espalda Baja' | 'Codo' | 'Muñeca' | 'Cadera' | 'Tobillo' | 'Cuello' | 'Torso' | 'Otro';

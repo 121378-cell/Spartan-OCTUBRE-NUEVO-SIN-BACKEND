@@ -2,13 +2,13 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../../context/AppContext.tsx';
 import LoadingSpinner from '../LoadingSpinner.tsx';
-// Placeholder for AI service call
-// import { getChronotypeAnalysis } from '../../services/aiService'; 
+import { getChronotypeAnalysis } from '../../services/aiService.ts'; 
 import SunIcon from '../icons/SunIcon.tsx';
 import OwlIcon from '../icons/OwlIcon.tsx';
 import HummingbirdIcon from '../icons/HummingbirdIcon.tsx';
+import type { ChronotypeAnalysis } from '../../types.ts';
 
-type ModalState = 'questioning' | 'loading' | 'result';
+type ModalState = 'questioning' | 'loading' | 'result' | 'error';
 
 const questions = [
     "Sin despertador, ¿a qué hora te despertarías naturalmente?",
@@ -18,15 +18,18 @@ const questions = [
 ];
 
 const ChronotypeQuestionnaireModal: React.FC = () => {
-    const { hideModal } = useAppContext();
+    const { hideModal, showToast, saveChronotypeAnalysis } = useAppContext();
     const [step, setStep] = useState(0);
     const [answers, setAnswers] = useState<string[]>([]);
     const [currentAnswer, setCurrentAnswer] = useState('');
     const [modalState, setModalState] = useState<ModalState>('questioning');
-    const [result, setResult] = useState<any>(null); // Replace 'any' with a proper type later
+    const [result, setResult] = useState<ChronotypeAnalysis | null>(null);
 
     const handleNext = async () => {
-        if (!currentAnswer.trim()) return;
+        if (!currentAnswer.trim()) {
+            showToast("Por favor, introduce una respuesta.");
+            return;
+        }
 
         const newAnswers = [...answers, currentAnswer];
         setAnswers(newAnswers);
@@ -36,23 +39,15 @@ const ChronotypeQuestionnaireModal: React.FC = () => {
             setStep(prev => prev + 1);
         } else {
             setModalState('loading');
-            // This is where you would call the AI service
-            // const analysis = await getChronotypeAnalysis(newAnswers);
-            // setResult(analysis);
+            const analysis = await getChronotypeAnalysis(newAnswers);
             
-            // Mock result for demonstration
-            setTimeout(() => {
-                setResult({
-                    chronotype: "Oso",
-                    description: "Tu energía sigue el ciclo del sol. Eres más productivo a media mañana y sientes una caída de energía natural a media tarde.",
-                    recommendations: [
-                        { area: "Entrenamiento", advice: "Tus mejores sesiones serán entre las 10 a.m. y la 1 p.m. Evita entrenar muy tarde." },
-                        { area: "Productividad", advice: "Realiza tus tareas más exigentes antes de comer. Usa la tarde para tareas más ligeras." },
-                        { area: "Nutrición", advice: "Un almuerzo equilibrado es clave para combatir la caída de energía de la tarde. Evita carbohidratos pesados." }
-                    ]
-                });
+            if(analysis) {
+                setResult(analysis);
+                saveChronotypeAnalysis(analysis);
                 setModalState('result');
-            }, 1500);
+            } else {
+                setModalState('error');
+            }
         }
     };
 
@@ -98,6 +93,7 @@ const ChronotypeQuestionnaireModal: React.FC = () => {
                     </div>
                 );
             case 'result':
+                if (!result) return null;
                 return (
                     <div className="text-center">
                          <div className="w-20 h-20 bg-spartan-surface rounded-full flex items-center justify-center mx-auto mb-4 text-spartan-gold">
@@ -106,7 +102,7 @@ const ChronotypeQuestionnaireModal: React.FC = () => {
                         <h3 className="text-2xl font-bold">Eres un {result.chronotype}</h3>
                         <p className="text-spartan-text-secondary my-4">{result.description}</p>
                         <div className="text-left space-y-2 bg-spartan-card p-4 rounded-lg">
-                            {result.recommendations.map((rec: any, index: number) => (
+                            {result.recommendations.map((rec, index) => (
                                 <div key={index}>
                                     <p className="font-bold text-spartan-gold">{rec.area}:</p>
                                     <p className="text-sm">{rec.advice}</p>
@@ -116,6 +112,14 @@ const ChronotypeQuestionnaireModal: React.FC = () => {
                         <div className="flex justify-end mt-6">
                             <button onClick={hideModal} className="py-2 px-6 bg-spartan-gold text-spartan-bg font-bold rounded-lg hover:bg-yellow-600 transition-colors">Entendido</button>
                         </div>
+                    </div>
+                );
+            case 'error':
+                 return (
+                    <div className="flex flex-col items-center justify-center min-h-[200px]">
+                        <p className="text-red-500 font-bold">Error al analizar.</p>
+                        <p className="text-spartan-text-secondary mt-2">Hubo un problema con la IA. Por favor, inténtalo de nuevo.</p>
+                        <button onClick={() => setModalState('questioning')} className="mt-4 py-2 px-4 bg-spartan-card hover:bg-spartan-border rounded-lg transition-colors">Reintentar</button>
                     </div>
                 );
         }

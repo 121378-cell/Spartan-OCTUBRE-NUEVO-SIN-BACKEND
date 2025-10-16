@@ -39,7 +39,10 @@ declare global {
   }
 }
 
-export const useSpeechRecognition = (onTranscriptReady: (transcript: string) => void) => {
+export const useSpeechRecognition = (
+    onTranscriptReady: (transcript: string) => void,
+    onError?: (error: string) => void
+) => {
     const [isListening, setIsListening] = useState(false);
     const recognitionRef = useRef<SpeechRecognition | null>(null);
 
@@ -59,6 +62,9 @@ export const useSpeechRecognition = (onTranscriptReady: (transcript: string) => 
         recognition.onend = () => setIsListening(false);
         recognition.onerror = (event) => {
             console.error("Error en el reconocimiento de voz:", event.error);
+            if (onError) {
+                onError(event.error);
+            }
             setIsListening(false);
         };
         recognition.onresult = (event) => {
@@ -67,13 +73,20 @@ export const useSpeechRecognition = (onTranscriptReady: (transcript: string) => 
         };
         
         recognitionRef.current = recognition;
-    }, [onTranscriptReady]);
+    }, [onTranscriptReady, onError]);
 
     const startListening = useCallback(() => {
         if (recognitionRef.current && !isListening) {
-            recognitionRef.current.start();
+            try {
+                recognitionRef.current.start();
+            } catch (error) {
+                 console.error("Error starting speech recognition:", error);
+                 if (onError) {
+                    onError('start-failed');
+                 }
+            }
         }
-    }, [isListening]);
+    }, [isListening, onError]);
 
     const stopListening = useCallback(() => {
         if (recognitionRef.current && isListening) {
