@@ -2,7 +2,6 @@
 
 import React, { useEffect } from 'react';
 import { AppProvider, useAppContext } from './context/AppContext.tsx';
-import { saveLastRoutine, loadLastRoutine } from './services/storageService';
 import Sidebar from './components/Sidebar.tsx';
 import Dashboard from './components/Dashboard.tsx';
 import Routines from './components/Routines.tsx';
@@ -62,6 +61,7 @@ import Progress from './components/Progress.tsx';
 import SynergyHub from './components/SynergyHub.tsx';
 import LogisticsInterventionModal from './components/modals/LogisticsInterventionModal.tsx';
 import TimeAdjustmentModal from './components/modals/TimeAdjustmentModal.tsx';
+import InvalidDropModal from './components/modals/InvalidDropModal.tsx';
 
 const AppContent: React.FC = () => {
   const { 
@@ -77,13 +77,6 @@ const AppContent: React.FC = () => {
   } = useAppContext();
 
   useEffect(() => {
-    // Demonstrate storage service usage
-    const lastRoutine = loadLastRoutine();
-    if (!lastRoutine) {
-      console.log('No routine found, saving a default one for offline use.');
-      saveLastRoutine({ id: 'default-offline', name: 'Default Offline Routine' });
-    }
-
     if (!userProfile.onboardingCompleted) {
       showModal('evaluation');
     }
@@ -151,6 +144,7 @@ const AppContent: React.FC = () => {
       case 'command-center': return <CommandCenterModal />;
       case 'logistics-intervention': return <LogisticsInterventionModal payload={modal.payload} />;
       case 'time-adjustment': return <TimeAdjustmentModal routine={modal.payload.routine} />;
+      case 'invalid-drop': return <InvalidDropModal />;
       default: return null;
     }
   };
