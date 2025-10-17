@@ -33,6 +33,7 @@ import type {
 } from '../types';
 import { InitialPlanResponse, getWeeklyCheckInFeedback, getSuccessManual, getFailureReframing, getPeriodizationGuardFeedback, recalculateScheduleForInterruption, compensateForSkippedWorkout, adjustRoutineForTime } from '../services/aiService';
 import { adaptRoutineForInjuries } from '../utils/routineAdapter';
+import { getExerciseMode } from '../utils/getExerciseMode';
 import { MOBILITY_DRILLS, EXERCISE_MOBILITY_MAP } from '../data/mobilityLibrary';
 
 
@@ -578,10 +579,29 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const updateSetProgress = (blockIndex: number, exerciseIndex: number, setIndex: number, updates: Partial<SetProgress>) => {
         if (!activeSession) return;
-        const newProgress = [...activeSession.progress];
-        const newSet = { ...newProgress[blockIndex][exerciseIndex].sets[setIndex], ...updates };
-        newProgress[blockIndex][exerciseIndex].sets[setIndex] = newSet;
-        setActiveSession({ ...activeSession, progress: newProgress });
+
+        const { routine } = activeSession;
+        const exercise = routine.blocks[blockIndex].exercises[exerciseIndex];
+        const exerciseMode = getExerciseMode(routine, routine.blocks[blockIndex], exercise);
+
+        // --- Smart Suggestion Logic (TCI3) ---
+        if (exerciseMode === 'strength' && updates.rir && updates.rir >= 4 && updates.weight) {
+            const currentWeight = parseFloat(updates.weight);
+            if (!isNaN(currentWeight)) {
+                const newRecommendedWeight = currentWeight + 2.5;
+                updateProgressionOverrides(routine.id, exercise.name, newRecommendedWeight);
+                showToast(`¡Buen trabajo! Sugerencia para el próximo set: ${newRecommendedWeight}kg.`);
+            }
+        }
+
+        const newProgress = produce(activeSession.progress, draft => {
+            draft[blockIndex][exerciseIndex].sets[setIndex] = {
+                ...draft[blockIndex][exerciseIndex].sets[setIndex],
+                ...updates,
+            };
+        });
+
+        setActiveSession(prev => prev ? ({ ...prev, progress: newProgress }) : null);
     };
     
     // AI Response Handling
