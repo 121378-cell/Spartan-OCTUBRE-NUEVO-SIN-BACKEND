@@ -9,6 +9,8 @@ services:
       - synergycoach_ia
     networks:
       - synergycoach_net
+    volumes:
+      - db_data:/app/data
 
   synergycoach_ia:
     build:
@@ -22,3 +24,6 @@ services:
 networks:
   synergycoach_net:
     driver: bridge
+
+volumes:
+  db_data:

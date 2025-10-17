@@ -1,7 +1,7 @@
 const path = require('path');
 const Database = require('better-sqlite3');
 
-const dbPath = path.resolve(__dirname, 'local.db');
+const dbPath = '/app/data/local.db';
 const db = new Database(dbPath);
 
 db.exec(`
@@ -9,6 +9,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id TEXT NOT NULL,
     committed INTEGER DEFAULT 0,
+    committed_days TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
 `);
