@@ -72,6 +72,11 @@ router.post('/compromiso', (req, res) => {
     return res.status(400).json({ error: 'plan_id and a dias_comprometidos array are required.' });
   }
 
+  // Validate for minimum frequency
+  if (dias_comprometidos.length < 2) {
+    return res.status(400).json({ error: 'Frecuencia insuficiente. Se requiere un compromiso de al menos 2 días.' });
+  }
+
   try {
     const committed_days_json = JSON.stringify(dias_comprometidos);
     const stmt = db.prepare('UPDATE plans SET committed = 1, committed_days = ? WHERE id = ?');
